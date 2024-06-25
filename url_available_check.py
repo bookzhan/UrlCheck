@@ -1,5 +1,4 @@
 import os
-
 import requests
 import pandas as pd
 
@@ -25,35 +24,25 @@ if __name__ == '__main__':
     print("url_available_check start")
     # Excel的路径,可以是相对路径,也可以是绝对路径
     file_path = "网站.xlsx"
-    # 表名,不输入默认第一张表
-    sheet_name = ""
-
+    # 定义含有可能的 URL 列名的列表
+    url_column_names = ['URL', '网址', '链接', '网站']
     try:
-        # 使用pandas读取Excel文件
-        if len(sheet_name) > 0:
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-        else:
-            df = pd.read_excel(file_path)
+        xls = pd.ExcelFile(file_path)
 
-        if 'URL' in df.columns:
-            url_list = df['URL'].tolist()
+        directory = os.path.dirname(file_path)
+        check_result_path = os.path.join(directory, 'check_result.xlsx')
 
-            result_urls = []
-            for url in url_list:
-                result_type = check_website(url)
-                result_urls.append({"URL": url, "Result": result_type})
-
-            result_df = pd.DataFrame(result_urls)
-            directory = os.path.dirname(file_path)
-
-            check_result_path = os.path.join(directory, 'check_result.xlsx')
-            if os.path.exists(check_result_path):
-                os.remove(check_result_path)
-            if not result_df.empty:
-                result_df.to_excel(check_result_path, index=False)
-
-        else:
-            print("The specified Excel file does not contain a 'URL' column.")
+        with pd.ExcelWriter(check_result_path) as writer:
+            for sheet_name in xls.sheet_names:
+                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                found_url_column = None
+                for col in url_column_names:
+                    if col in df.columns:
+                        found_url_column = col
+                        break
+                if found_url_column:
+                    df['是否可访问'] = df[found_url_column].apply(check_website)
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
     except Exception as e:
         print(f"Error reading Excel file: {e}")
