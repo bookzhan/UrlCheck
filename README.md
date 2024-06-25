@@ -1,5 +1,8 @@
 支持检测Excel中的网站是否可以访问
-Excel的网站列名需要是URL
+**Excel的网站列名需要是URL！！！**
+
+#### 环境准备：
+`pip install pandas requests openpyxl`
 
 需要修改以下两处
 ```
